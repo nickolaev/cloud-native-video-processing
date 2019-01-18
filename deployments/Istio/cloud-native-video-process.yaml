@@ -1,0 +1,222 @@
+##################################################################################################
+# Video source service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-source
+  labels:
+    app: video-source
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10100
+    name: http-video-source
+    targetPort: 10100
+  selector:
+    app: video-source
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: video-source
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: video-source
+    spec:
+      containers:
+      - name: source
+        image: source:latest
+        args: ["-source","/streamer/video.mp4","-port","10100"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10100
+---
+##################################################################################################
+# Logo overlay service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-logo
+  labels:
+    app: video-logo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10100
+    targetPort: 10100
+    name: http-logo
+  selector:
+    app: video-logo
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: video-logo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: video-logo
+    spec:
+      containers:
+      - name: process-logo
+        image: process:latest
+        args: ["-source","http://video-source:10100","-logo","/streamer/logo.png","-port","10100"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10100
+---
+##################################################################################################
+# Timestamp overlay service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-timestamp
+  labels:
+    app: video-timestamp
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10100
+    targetPort: 10100
+    name: http-timestamp
+  selector:
+    app: video-timestamp
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: video-timestamp
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: video-timestamp
+    spec:
+      containers:
+      - name: process-timestamp
+        image: process:latest
+        args: ["-source","http://video-logo:10100","-font","/streamer/bedstead.otf","-timestamp","-port","10100"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10100
+---
+##################################################################################################
+# Resize 240p service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-transcode-low
+  labels:
+    app: video-transcode-low
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10100
+    targetPort: 10100
+    name: http-low
+  selector:
+    app: video-transcode-low
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: video-transcode-low
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: video-transcode-low
+    spec:
+      containers:
+      - name: process-low
+        image: process:latest
+        args: ["-source","http://video-timestamp:10100","-preset","240p","-port","10100"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10100
+---
+##################################################################################################
+# Resize 480p service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-transcode-medium
+  labels:
+    app: video-transcode-medium
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10100
+    targetPort: 10100
+    name: http-medium
+  selector:
+    app: video-transcode-medium
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: video-transcode-medium
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: video-transcode-medium
+    spec:
+      containers:
+      - name: process-medium
+        image: process:latest
+        args: ["-source","http://video-timestamp:10100","-preset","480p","-port","10100"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10100
+---
+##################################################################################################
+# Resize HD service
+##################################################################################################
+apiVersion: v1
+kind: Service
+metadata:
+  name: video-transcode-high
+  labels:
+    app: video-transcode-high
+spec:
+  type: ClusterIP
+  ports:
+  - port: 10100
+    targetPort: 10100
+    name: http-high
+  selector:
+    app: video-transcode-high
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: video-transcode-high
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: video-transcode-high
+    spec:
+      containers:
+      - name: process-high
+        image: process:latest
+        args: ["-source","http://video-timestamp:10100","-preset","HD","-port","10100"]
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 10100
+---

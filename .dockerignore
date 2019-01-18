@@ -1,0 +1,6 @@
+# Ignore all
+*
+
+# ... except these
+!cmd
+!assets

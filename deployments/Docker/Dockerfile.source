@@ -1,0 +1,15 @@
+FROM golang:1.11 as builder
+ENV PACKAGEPATH=github.com/nickolaev/cloud-native-video-processing/
+COPY [".","/go/src/${PACKAGEPATH}"]
+WORKDIR /go/src/${PACKAGEPATH}/
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o /go/bin/streamer ./cmd/streamer/*.go
+
+FROM jrottenberg/ffmpeg:4.1-scratch
+MAINTAINER Nikolay Nikolaev <nnikolay@vmware.com>
+
+COPY ./assets /streamer
+COPY --from=builder /go/bin/streamer /streamer
+
+EXPOSE 10100
+ENTRYPOINT ["/streamer/streamer"]
+CMD []

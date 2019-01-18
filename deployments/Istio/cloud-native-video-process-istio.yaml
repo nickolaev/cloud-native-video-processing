@@ -1,0 +1,151 @@
+##################################################################################################
+# Video gateway
+##################################################################################################
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: video-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+##################################################################################################
+# Video virtual service
+##################################################################################################
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: video
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - video-gateway
+  http:
+  - match:
+    - headers:
+        process-video:
+          regex: high_([a-zA-Z_]+)
+    route:
+    - destination:
+        host: video-transcode-high
+        port:
+          number: 10100
+  - match:
+    - headers:
+        process-video:
+          regex: medium_([a-zA-Z_]+)
+    route:
+    - destination:
+        host: video-transcode-medium
+        port:
+          number: 10100
+  - match:
+    - headers:
+        process-video:
+          regex: low_([a-zA-Z_]+)
+    route:
+    - destination:
+        host: video-transcode-low
+        port:
+          number: 10100
+  - match:
+    - headers:
+        process-video:
+          regex: ([a-zA-Z_]+)_enable_([a-zA-Z_]+)
+    route:
+    - destination:
+        host: video-timestamp
+        port:
+          number: 10100
+  - match:
+    - headers:
+        process-video:
+          regex: ([a-zA-Z_]+)_enable
+    route:
+    - destination:
+        host: video-logo
+        port:
+          number: 10100
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: video-source
+        port:
+          number: 10100
+---
+##################################################################################################
+# Timestamp virtual service
+##################################################################################################
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: video-timestamp
+spec:
+  hosts:
+  - "video-timestamp"
+  http:
+  - match:
+    - headers:
+        process-video:
+          regex: ([a-zA-Z_]+)_enable_([a-zA-Z_]+)
+    route:
+    - destination:
+        host: video-timestamp
+        port:
+          number: 10100
+  - match:
+    - headers:
+        process-video:
+          regex: ([a-zA-Z_]+)_enable
+    route:
+    - destination:
+        host: video-logo
+        port:
+          number: 10100
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: video-source
+        port:
+          number: 10100
+---
+##################################################################################################
+# Logo virtual service
+##################################################################################################
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: video-logo
+spec:
+  hosts:
+  - "video-logo"
+  http:
+  - match:
+    - headers:
+        process-video:
+          regex: ([a-zA-Z_]+)_enable
+    route:
+    - destination:
+        host: video-logo
+        port:
+          number: 10100
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: video-source
+        port:
+          number: 10100
