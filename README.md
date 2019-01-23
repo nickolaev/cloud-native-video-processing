@@ -1,12 +1,16 @@
 # Descritpion
 
-This project implements a Cloud Native Video Processing application - streamer. It's core is a thin shim written in Go, that calls ffmpeg binary for the real video manipulation.
+This project implements a Cloud Native Video Processing application named Streamer.  
+
+Its core is a thin shim written in Go leveraging the ffmpeg binary for the real video manipulation.
 
 ## Quick start
 
+Using it is pretty straighforward, just use one of the following guidelines that matches best with your deployment environment.
+
 ### Local Streamer pipeline
 
-To run a static Streamer pipeline locally:
+To start a static Streamer pipeline locally, run the following:
 
 ```
 ./scripts/local.sh
@@ -21,7 +25,8 @@ http://localhost:2003 - the video source + the logo + the timestamp + resized to
 ```
 
 ### Kubernetes Streamer pipeline
-If you are running a local Kubernetes cluster, you can simple build and images in the local Docker and deploy:
+
+If you are running a local Kubernetes cluster, you can simply build and deploy the images using the following:
 
 ```
 make build
@@ -32,17 +37,18 @@ Please consult the Docker documentation if you need to export the images and upl
 
 ### Istio Streamer pipeline
 
-Similarly to Kubernetes, a basic local installation is done by executing:
+Similarly to Kubernetes, for Istio a basic local installation is done by executing:
 
 ```
 make build
 make istio-deploy
 ```
 
-More complex setups will require advanced knowledge, which is beyond the scope of this Quick Start.
+More complex setups will require advanced knowledge that is beyond the scope of this Quick Start.
 
 ## Configuration
-Streamer inteprets its arguments and gnereates the relevant ffmpeg command line options. Currently it supports the following flags:
+
+Streamer generates the relevant ffmpeg command line options based on its arguments. Currently it supports the following:
 
 ```
   -font string
@@ -72,7 +78,10 @@ Streamer inteprets its arguments and gnereates the relevant ffmpeg command line 
 
 ## Design
 
-The generic video processing setup includes the Streamer listneing for incoming HTTP requests, spawning a chilf ffmpeg process to output in the stdout pipe. The content of that pipe is stramed back as and HTTP video stream, in reposnse to the initial HTTP request.
+The generic video processing setup is depicted in the following figure.  
+
+The Streamer is listening for incoming HTTP requests and it spawns a child ffmpeg process that output in the stdout pipe. 
+The content of that pipe is stramed back as an HTTP video stream as a response to the initial HTTP request.
 
 ```
                  +--------------+
@@ -89,11 +98,11 @@ The generic video processing setup includes the Streamer listneing for incoming 
 
 ```
 
-Depending on the command line arguments, the spawned ffmpeg can feed its processing pipeline from a remote HTTP connection e.g. another Streamer. Optionally it can read a local video stream, a file or other video source.
+Depending on the command line arguments, the spawned ffmpeg can feed its processing pipeline from a remote HTTP connection, e.g. another Streamer. Optionally it can read a local video stream, a file or other video source.
 
 # Copyrights
 
-This project is licnesed under the Apache 2.0 license. Please see the main LICENSE.txt for more details.
+This project is licensed under the Apache 2.0 license. Please see the main LICENSE.txt for more details.
 
 ***video.mp4*** "*Rory and the snow*" by Stephen McPolin is
 Licensed under Public Domain.
