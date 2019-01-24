@@ -1,7 +1,7 @@
 #!/bin/sh
 
-function cleanup {
-    kill -9 ${PID_SOURCE} ${PID_LOGO} ${PID_TIMESTAMP} >/dev/null 2>&1
+cleanup() {
+    kill -9 "${PID_SOURCE}" "${PID_LOGO}" "${PID_TIMESTAMP}" >/dev/null 2>&1
 }
 trap cleanup EXIT
 
